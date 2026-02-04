@@ -1,0 +1,61 @@
+name: readory
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  
+  # Navigation
+  go_router: ^14.8.0
+  
+  # Utils
+  fpdart: ^1.1.0
+  equatable: ^2.0.7
+  uuid: ^4.5.1
+  
+  # Code Gen Annotations
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  
+  # Data & Local Storage
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  path_provider: ^2.1.5
+  shared_preferences: ^2.3.5
+  
+  # UI
+  google_fonts: ^6.2.1
+  file_picker: ^10.3.8
+  epub_view: ^3.2.0
+  syncfusion_flutter_pdfviewer: ^24.1.41
+  permission_handler: ^12.0.1
+  flutter_staggered_grid_view: ^0.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  
+  # Build Runner & Generators -- Removing explicit versions to let solver work
+  build_runner: 
+  riverpod_generator: 
+  isar_generator: ^3.1.0+1
+  json_serializable: 
+  freezed: 
+  
+  # Linting
+  custom_lint: 
+  riverpod_lint: 
+
+flutter:
+  uses-material-design: true
