@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:syncfusion_flutter_pdf/pdf.dart';
+import 'package:pdfrx/pdfrx.dart'; 
 import '../../../../domain/entities/book_entity.dart';
 import 'reader_view_model.dart';
 import 'widgets/pdf_reader_view.dart';
@@ -17,38 +16,34 @@ class ReaderScreen extends ConsumerStatefulWidget {
 class _ReaderScreenState extends ConsumerState<ReaderScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final PdfViewerController _pdfController = PdfViewerController();
-  List<PdfBookmark> _toc = []; // Syncfusion uses PdfBookmark
+  List<PdfOutlineNode> _toc = []; 
 
   @override
   void dispose() {
     super.dispose();
   }
 
-  Future<void> _onDocumentReady(PdfDocumentLoadedDetails details) async {
+  Future<void> _onDocumentReady(PdfDocument document) async {
     if (mounted) {
-       // Syncfusion loads bookmarks 
-       // details.document.bookmarks is a PdfBookmarkBase, which is iterable of PdfBookmark
-       final bookmarks = details.document.bookmarks;
-       if (bookmarks.count > 0) {
-          _toc = [];
-          for(int i=0; i<bookmarks.count; i++) {
-            _toc.add(bookmarks[i]);
-          }
-          if (mounted) setState(() {});
+       final outline = await document.loadOutline();
+       if (outline.isNotEmpty) {
+          setState(() {
+            _toc = outline;
+          });
        }
 
-       ref.read(readerViewModelProvider(widget.book).notifier).setTotalPages(details.document.pages.count);
+       ref.read(readerViewModelProvider(widget.book).notifier).setTotalPages(document.pages.length);
     }
   }
 
-  void _onTocTap(PdfBookmark node) {
-     // _pdfController.jumpToBookmark(node); // Syncfusion controller has jumpToBookmark
-     _pdfController.jumpToBookmark(node);
+  void _onTocTap(PdfOutlineNode node) {
+     if (node.dest != null) {
+        _pdfController.goToDest(node.dest); 
+     }
      Navigator.pop(context);
   }
   
-  // Syncfusion bookmarks structure matching
-  List<Widget> _buildTocItems(List<PdfBookmark> nodes, {int depth = 0}) {
+  List<Widget> _buildTocItems(List<PdfOutlineNode> nodes, {int depth = 0}) {
     List<Widget> items = [];
     for (var node in nodes) {
         items.add(
@@ -58,19 +53,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             onTap: () => _onTocTap(node),
           ),
         );
-        // Recursion not easily supported merely by List<PdfDocumentBookmark> without children property?
-        // Checking API: Syncfusion PdfDocumentBookmark usually has no children property exposed directly in some versions?
-        // Actually it does not have recursive structure in the same way simple list often.
-        // Wait, standard PDF bookmarks are tree. 
-        // Let's assume for now we don't have deep nested TOC without extra package `syncfusion_flutter_pdf`.
-        // So we will just show top level or flat list if we can get it.
-        // Since we can't easily get it without the core pdf package, lets comment out recursion or keep it empty.
-        
-        /* 
         if (node.children.isNotEmpty) {
            items.addAll(_buildTocItems(node.children, depth: depth + 1));
         }
-        */
     }
     return items;
   }
@@ -104,16 +89,18 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           children: [
             // READER VIEW
             if (isPdf)
-              PdfReaderView(
-                book: widget.book,
-                controller: _pdfController,
-                onPageChanged: notifier.onPageChanged,
-                onDocumentReady: _onDocumentReady,
-                theme: state.theme,
-                scrollDirection: state.scrollDirection,
-                annotations: state.annotations,
-                onAnnotationAdded: notifier.addAnnotationEntity,
-                onBackgroundTap: notifier.toggleControls,
+              Positioned.fill(
+                child: PdfReaderView(
+                  book: widget.book,
+                  controller: _pdfController,
+                  onPageChanged: notifier.onPageChanged,
+                  onDocumentReady: _onDocumentReady,
+                  theme: state.theme,
+                  scrollDirection: state.scrollDirection,
+                  annotations: state.annotations,
+                  onAnnotationAdded: notifier.addAnnotationEntity,
+                  onBackgroundTap: notifier.toggleControls,
+                ),
               )
             else
               const Center(child: Text("EPUB Reader V2 Pending")),
@@ -219,7 +206,9 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                             min: 1,
                             max: state.totalPages > 0 ? state.totalPages.toDouble() : (state.currentPage + 50).toDouble(),
                             onChanged: (val) {
-                              if (isPdf) _pdfController.jumpToPage(val.toInt());
+                              // pdfrx uses goToPage (1-based usually? check API)
+                              // API: goToPage(pageNumber: int)
+                              if (isPdf) _pdfController.goToPage(pageNumber: val.toInt());
                             },
                           ),
                         ),

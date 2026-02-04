@@ -37,7 +37,7 @@ dependencies:
   google_fonts: ^6.2.1
   file_picker: ^10.3.8
   epub_view: ^3.2.0
-  syncfusion_flutter_pdfviewer: ^24.1.41
+  pdfrx: ^2.2.0
   permission_handler: ^12.0.1
   flutter_staggered_grid_view: ^0.7.0
 
@@ -56,6 +56,13 @@ dev_dependencies:
   # Linting
   custom_lint: 
   riverpod_lint: 
+
+dependency_overrides:
+  js: ^0.7.1
+  image: ^4.5.4
+  archive: ^4.0.0
+  epubx:
+    path: vendor/epubx
 
 flutter:
   uses-material-design: true

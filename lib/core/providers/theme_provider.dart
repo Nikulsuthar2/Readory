@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,5 +32,14 @@ class ThemeController extends StateNotifier<ThemeMode> {
     if (mode == ThemeMode.light) val = 'light';
     if (mode == ThemeMode.dark) val = 'dark';
     await _prefs.setString(_key, val);
+    
+    // Update System UI
+    final isDark = mode == ThemeMode.dark; // Simplified logic, ideally check system if mode is system
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+    ));
   }
 }
